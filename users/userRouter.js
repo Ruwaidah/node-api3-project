@@ -6,13 +6,18 @@ router.use(express.json());
 const userDb = require("./userDb");
 
 //  POST method -- Create a user
-router.post("/", (req, res) => {
-  if (req.body.name) {
-    userDb.insert(req.body).then(newuser => res.status(200).json(req.body));
-  } else {
-    res.status(400).json({ errorMessage: "Please provide name." });
-  }
+router.post("/", validateUser, (req, res) => {
+  userDb
+    .insert(req.body)
+    .then(newuser => res.status(200).json(req.body))
+    .catch(error => {
+      res.status(500).json({
+        error: "There was an error while saving the comment to the data base"
+      });
+    });
 });
+
+// POST method to Create new post for user
 
 router.post("/:id/posts", (req, res) => {
   // do your magic!
@@ -38,8 +43,18 @@ router.get("/:id", validateUserId, (req, res) => {
 });
 
 // Get the User Posts
-router.get("/:id/posts", (req, res) => {
-  // do your magic!
+router.get("/:id/posts", validateUserId, (req, res) => {
+  console.log(req.user);
+  userDb
+    .getUserPosts(req.params.id)
+    .then(posts => {
+      res.status(200).json(posts);
+    })
+    .catch(error =>
+      res.status(500).json({
+        error: "There was an error while saving the comment to the data base"
+      })
+    );
 });
 
 //  Delete Mothod === delete User
@@ -125,7 +140,15 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  if (req.body) {
+    if (req.body.name) {
+      next();
+    } else {
+      res.status(400).json({ message: "missing required name field" });
+    }
+  } else {
+    res.status(400).json({ message: "missing user data" });
+  }
 }
 
 function validatePost(req, res, next) {

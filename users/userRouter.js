@@ -58,21 +58,65 @@ router.get("/:id/posts", (req, res) => {
 router.delete("/:id", (req, res) => {
   // do your magic!
   userDb
-    .remove(req.params.id)
-    .then(remove => {
-      res.status(200).json(remove);
+    .getById(req.params.id)
+    .then(user => {
+      if (user) {
+        userDb
+          .remove(req.params.id)
+          .then(remove => {
+            res.status(200).json(remove);
+          })
+          .catch(error =>
+            res.status(500).json({
+              error:
+                "There was an error while saving the comment to the data base"
+            })
+          );
+      } else {
+        res
+          .status(404)
+          .json({ message: "The user with the specified ID does not exist." });
+      }
     })
-    .catch(error =>
-      res
-        .status(500)
-        .json({
-          error: "There was an error while saving the comment to the data base"
-        })
-    );
+    .catch(error => {
+      res.status(500).json({
+        error: "There was an error while saving the comment to the data base"
+      });
+    });
 });
 
 router.put("/:id", (req, res) => {
   // do your magic!
+  console.log(req.params.id);
+  userDb
+    .getById(req.params.id)
+    .then(user => {
+      console.log(user);
+      if (user) {
+        if (req.body.name) {
+          userDb
+            .update(req.params.id, req.body)
+            .then(update => res.status(202).json(req.body))
+            .catch(error => {
+              res.status(500).json({
+                error:
+                  "There was an error while saving the comment to the database"
+              });
+            });
+        } else {
+          res.status(400).json({ errorMessage: "Please provide name." });
+        }
+      } else {
+        res
+          .status(404)
+          .json({ message: "The user with the specified ID does not exist." });
+      }
+    })
+    .catch(error => {
+      res.status(500).json({
+        error: "There was an error while saving the comment to the data  base"
+      });
+    });
 });
 
 //custom middleware

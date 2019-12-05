@@ -4,6 +4,7 @@ const router = express.Router();
 router.use(express.json());
 
 const userDb = require("./userDb");
+const postDb = require("../posts/postDb");
 
 //  POST method -- Create a user
 router.post("/", validateUser, (req, res) => {
@@ -19,8 +20,16 @@ router.post("/", validateUser, (req, res) => {
 
 // POST method to Create new post for user
 
-router.post("/:id/posts", (req, res) => {
+router.post("/:id/posts", validateUserId, validatePost, (req, res) => {
   // do your magic!
+  postDb
+    .insert(req.body)
+    .then(newpost => res.status(200).json(req.body))
+    .catch(error =>
+      res.status(500).json({
+        error: "There was an error while saving the comment to the database"
+      })
+    );
 });
 
 // Get All Users
@@ -153,6 +162,15 @@ function validateUser(req, res, next) {
 
 function validatePost(req, res, next) {
   // do your magic!
+  if (req.body) {
+    if (req.body.text) {
+      next();
+    } else {
+      res.status(400).json({ message: "missing required text field" });
+    }
+  } else {
+    res.status(400).json({ message: "missing post data" });
+  }
 }
 
 module.exports = router;

@@ -5,8 +5,8 @@ router.use(express.json());
 
 const userDb = require("./userDb");
 
+//  POST method -- Create a user
 router.post("/", (req, res) => {
-  // do your magic!
   if (req.body.name) {
     userDb.insert(req.body).then(newuser => res.status(200).json(req.body));
   } else {
@@ -18,8 +18,8 @@ router.post("/:id/posts", (req, res) => {
   // do your magic!
 });
 
+// Get All Users
 router.get("/", (req, res) => {
-  // do your magic!
   userDb
     .get()
     .then(user => {
@@ -32,31 +32,18 @@ router.get("/", (req, res) => {
     );
 });
 
-router.get("/:id", (req, res) => {
-  // do your magic!
-  userDb
-    .getById(req.params.id)
-    .then(user => {
-      if (user) res.status(200).json(user);
-      else {
-        res
-          .status(404)
-          .json({ message: "The user with the specified ID does not exist." });
-      }
-    })
-    .catch(error =>
-      res.status(500).json({
-        error: "There was an error while saving the comment to the data base"
-      })
-    );
+//  Get One User By Id
+router.get("/:id", validateUserId, (req, res) => {
+  res.status(200).json(req.user);
 });
 
+// Get the User Posts
 router.get("/:id/posts", (req, res) => {
   // do your magic!
 });
 
+//  Delete Mothod === delete User
 router.delete("/:id", (req, res) => {
-  // do your magic!
   userDb
     .getById(req.params.id)
     .then(user => {
@@ -85,13 +72,11 @@ router.delete("/:id", (req, res) => {
     });
 });
 
+// PUT method Update A User
 router.put("/:id", (req, res) => {
-  // do your magic!
-  console.log(req.params.id);
   userDb
     .getById(req.params.id)
     .then(user => {
-      console.log(user);
       if (user) {
         if (req.body.name) {
           userDb
@@ -122,7 +107,21 @@ router.put("/:id", (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  // do your magic!
+  userDb
+    .getById(req.params.id)
+    .then(user => {
+      if (user) {
+        req.user = user;
+        next();
+      } else {
+        res.status(400).json({ message: "invalid user id" });
+      }
+    })
+    .catch(error =>
+      res.status(500).json({
+        error: "There was an error while saving the comment to the data base"
+      })
+    );
 }
 
 function validateUser(req, res, next) {
